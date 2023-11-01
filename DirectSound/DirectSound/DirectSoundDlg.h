@@ -27,7 +27,7 @@ protected:
 	HICON m_hIcon;
 
 	CDirectSound m_ds;
-	LPDIRECTSOUNDBUFFER lpDSB264, lpDSBTonleiter, lpDSBDrei[3], lpDSBKlavier[9];
+	LPDIRECTSOUNDBUFFER lpDSB264, lpDSBTonleiter, lpDSBDreiklang[3], lpDSBKlavier[9];
 	double ton[9];
 	int c = 264;
 
@@ -42,4 +42,16 @@ public:
 	afx_msg void OnBnClickedEnde();
 	afx_msg void OnBnClickedCdurtonleiter();
 	afx_msg void OnBnClickedStop();
+	afx_msg void OnNMCustomdrawLautstaerke(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnNMCustomdrawBalance(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnBnClickedKlavierc();
+	afx_msg void OnBnClickedKlavierd();
+	afx_msg void OnBnClickedKlaviere();
+	afx_msg void OnBnClickedKlavierf();
+	afx_msg void OnBnClickedKlavierg();
+	afx_msg void OnBnClickedKlaviera();
+	afx_msg void OnBnClickedKlavierh();
+	afx_msg void OnBnClickedKlavierc2();
+	afx_msg void OnBnClickedPcmsound();
+	afx_msg void OnBnClickedCdurdreiklang();
 };
