@@ -48,6 +48,7 @@ BEGIN_MESSAGE_MAP(CDirectSoundDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_KlavierC2, &CDirectSoundDlg::OnBnClickedKlavierc2)
 	ON_BN_CLICKED(IDC_PcmSound, &CDirectSoundDlg::OnBnClickedPcmsound)
 	ON_BN_CLICKED(IDC_CDurDreiklang, &CDirectSoundDlg::OnBnClickedCdurdreiklang)
+	ON_BN_CLICKED(IDC_CHECK1, &CDirectSoundDlg::OnBnClickedCheck1)
 END_MESSAGE_MAP()
 
 
@@ -341,9 +342,16 @@ void CDirectSoundDlg::OnBnClickedKlavierc2()
 		OnCancel();
 }
 
+void CDirectSoundDlg::OnBnClickedCheck1()
+{
+	// TODO: Add your control notification handler code here
+}
+
 
 void CDirectSoundDlg::OnBnClickedEnde()
 {
 	OnOK();
 }
+
+
 

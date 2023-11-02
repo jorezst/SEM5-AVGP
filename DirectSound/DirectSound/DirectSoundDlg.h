@@ -54,4 +54,5 @@ public:
 	afx_msg void OnBnClickedKlavierc2();
 	afx_msg void OnBnClickedPcmsound();
 	afx_msg void OnBnClickedCdurdreiklang();
+	afx_msg void OnBnClickedCheck1();
 };
