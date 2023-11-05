@@ -90,12 +90,11 @@ BOOL CDirectSoundDlg::OnInitDialog()
 	for (int i = 0; i < 3; i++) {
 		if ((lpDSBDreiklang[i] = m_ds.CreateSoundBuffer(2, 16, 22050, 2)) == 0)
 			OnCancel();
-		m_ds.GenerateSound(lpDSBDreiklang[i], 0, 2, ton[2 * i]);
 	}
 
 	// create 9 sound buffers
 	for (int i = 0; i < 9; i++) {
-		if ((lpDSBKlavier[i] = m_ds.CreateSoundBuffer(2, 16, 22050, 2)) == 0)
+		if ((lpDSBKlavier[i] = m_ds.CreateSoundBuffer(2, 16, 22050, 1)) == 0)
 			OnCancel();
 		m_ds.GenerateSound(lpDSBKlavier[i], 0, 1, ton[i]);
 	}
@@ -103,8 +102,8 @@ BOOL CDirectSoundDlg::OnInitDialog()
 
 
 	// Default Values for Lautstaerke and Balance
-	((CSliderCtrl*)GetDlgItem(IDC_Lautstaerke))->SetRange(-8000, 0);
-	((CSliderCtrl*)GetDlgItem(IDC_Lautstaerke))->SetPos(-8000);
+	((CSliderCtrl*)GetDlgItem(IDC_Lautstaerke))->SetRange(-7000, 0);
+	((CSliderCtrl*)GetDlgItem(IDC_Lautstaerke))->SetPos(-7000);
 	((CSliderCtrl*)GetDlgItem(IDC_Lautstaerke))->SetPos(0);
 	((CSliderCtrl*)GetDlgItem(IDC_Balance))->SetRange(-5000, 5000);
 	((CSliderCtrl*)GetDlgItem(IDC_Balance))->SetPos(5000);
@@ -199,8 +198,22 @@ void CDirectSoundDlg::OnBnClickedCdurtonleiter()
 
 void CDirectSoundDlg::OnBnClickedCdurdreiklang()
 {
+	FILE* file[3];
+
+	file[0] = fopen("C.raw", "rb");
+	file[1] = fopen("E.raw", "rb");
+	file[2] = fopen("G.raw", "rb");
+
 	for (int i = 0; i < 3; i++) {
-		m_ds.GenerateSound(lpDSBDreiklang[i], 0, 2, 264);
+		if (((CButton*)GetDlgItem(IDC_CHECK1))->GetCheck()) {
+			m_ds.LoadPCMSound(lpDSBDreiklang[i], 0, 2, file[i]);
+		}
+		else {
+			m_ds.GenerateSound(lpDSBDreiklang[i], 0, 2, ton[2 * i]);
+		}
+	}
+
+	for (int i = 0; i < 3; i++) {
 		if (!m_ds.Play(lpDSBDreiklang[i], true))
 			OnCancel();
 	}
@@ -289,62 +302,83 @@ void CDirectSoundDlg::OnNMCustomdrawBalance(NMHDR* pNMHDR, LRESULT* pResult)
 
 void CDirectSoundDlg::OnBnClickedKlavierc()
 {	
-	if (!m_ds.Play(lpDSBKlavier[0], true))
+	if (!m_ds.Play(lpDSBKlavier[0]))
 		OnCancel();
 }
 
 
 void CDirectSoundDlg::OnBnClickedKlavierd()
 {	
-	if (!m_ds.Play(lpDSBKlavier[1], true))
+	if (!m_ds.Play(lpDSBKlavier[1]))
 		OnCancel();
 }
 
 
 void CDirectSoundDlg::OnBnClickedKlaviere()
 {	
-	if (!m_ds.Play(lpDSBKlavier[2], true))
+	if (!m_ds.Play(lpDSBKlavier[2]))
 		OnCancel();
 }
 
 
 void CDirectSoundDlg::OnBnClickedKlavierf()
 {	
-	if (!m_ds.Play(lpDSBKlavier[3], true))
+	if (!m_ds.Play(lpDSBKlavier[3]))
 		OnCancel();
 }
 
 
 void CDirectSoundDlg::OnBnClickedKlavierg()
 {	
-	if (!m_ds.Play(lpDSBKlavier[4], true))
+	if (!m_ds.Play(lpDSBKlavier[4]))
 		OnCancel();
 }
 
 
 void CDirectSoundDlg::OnBnClickedKlaviera()
 {	
-	if (!m_ds.Play(lpDSBKlavier[5], true))
+	if (!m_ds.Play(lpDSBKlavier[5]))
 		OnCancel();
 }
 
 
 void CDirectSoundDlg::OnBnClickedKlavierh()
 {
-	if (!m_ds.Play(lpDSBKlavier[6], true))
+	if (!m_ds.Play(lpDSBKlavier[6]))
 		OnCancel();
 }
 
 
 void CDirectSoundDlg::OnBnClickedKlavierc2()
 {
-	if (!m_ds.Play(lpDSBKlavier[7], true))
+	if (!m_ds.Play(lpDSBKlavier[7]))
 		OnCancel();
 }
 
 void CDirectSoundDlg::OnBnClickedCheck1()
 {
-	// TODO: Add your control notification handler code here
+	if (((CButton*)GetDlgItem(IDC_CHECK1))->GetCheck()) {
+		FILE* file[9];
+
+		file[0] = fopen("C.raw", "rb");
+		file[1] = fopen("D.raw", "rb");
+		file[2] = fopen("E.raw", "rb");
+		file[3] = fopen("F.raw", "rb");
+		file[4] = fopen("G.raw", "rb");
+		file[5] = fopen("A.raw", "rb");
+		file[6] = fopen("H.raw", "rb");
+		file[7] = fopen("C_hoch.raw", "rb");
+		file[8] = fopen("G.raw", "rb");
+
+		for (int i = 0; i < 9; i++) {
+			m_ds.LoadPCMSound(lpDSBKlavier[i], 0, 1, file[i]);
+		}
+	}
+	else {
+		for (int i = 0; i < 9; i++) {
+			m_ds.GenerateSound(lpDSBKlavier[i], 0, 1, ton[i]);
+		}
+	}
 }
 
 

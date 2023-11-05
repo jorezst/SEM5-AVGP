@@ -30,6 +30,8 @@ protected:
 	LPDIRECTSOUNDBUFFER lpDSB264, lpDSBTonleiter, lpDSBDreiklang[3], lpDSBKlavier[9];
 	double ton[9];
 	int c = 264;
+	FILE* fileptr;
+	long filelen;
 
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
