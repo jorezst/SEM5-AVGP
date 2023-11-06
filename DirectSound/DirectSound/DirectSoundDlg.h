@@ -27,11 +27,12 @@ protected:
 	HICON m_hIcon;
 
 	CDirectSound m_ds;
-	LPDIRECTSOUNDBUFFER lpDSB264, lpDSBTonleiter, lpDSBDreiklang[3], lpDSBKlavier[9];
+	LPDIRECTSOUNDBUFFER lpDSB264, lpDSBTonleiter, lpDSBDreiklang[3], lpDSBKlavier[9], lpDSBPCM;
 	double ton[9];
 	int c = 264;
 	FILE* fileptr;
 	long filelen;
+	int mode = -1;
 
 	// Generated message map functions
 	virtual BOOL OnInitDialog();

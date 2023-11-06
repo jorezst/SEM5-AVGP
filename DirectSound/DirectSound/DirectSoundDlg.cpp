@@ -79,11 +79,14 @@ BOOL CDirectSoundDlg::OnInitDialog()
 	ton[8] = 0;
 
 	
-	// create a 4 second sound buffer
+	// create the 4 second sound buffers
 	if ((lpDSB264 = m_ds.CreateSoundBuffer(2, 16, 22050, 4)) == 0)
 		OnCancel();
 
 	if ((lpDSBTonleiter = m_ds.CreateSoundBuffer(2, 16, 22050, 4)) == 0)
+		OnCancel();
+
+	if ((lpDSBPCM = m_ds.CreateSoundBuffer(2, 16, 22050, 4)) == 0)
 		OnCancel();
 
 	// create 3 sound buffers
@@ -153,23 +156,50 @@ HCURSOR CDirectSoundDlg::OnQueryDragIcon()
 
 void CDirectSoundDlg::OnTimer(UINT_PTR nIDEvent)
 {
-	// TODO: Add your message handler code here and/or call default
-	static int j = 0, buffnr = 1, playpos;
-	if ((playpos = m_ds.GetPlayPosition(lpDSBTonleiter)) == -1) {
-		KillTimer(1); return;
-	}
-	if (((playpos > 50) && (buffnr == 0)) || ((playpos < 50) && (buffnr == 1))) {
-		if ((++j) == 9) { // major scale finished
-			KillTimer(1);
-			j = 0;
-			if (!m_ds.Stop(lpDSBTonleiter))
-				return;
-			return;
+	//Check for Tonleiter-Mode
+	if (mode == 0) {
+		// TODO: Add your message handler code here and/or call default
+		static int j = 0, buffnr = 1, playpos;
+		if ((playpos = m_ds.GetPlayPosition(lpDSBTonleiter)) == -1) {
+			KillTimer(1); return;
 		}
-		m_ds.GenerateSound(lpDSBTonleiter, buffnr * 2, 2, ton[j]);
-		if (buffnr == 1) buffnr = 0; // change buffer
-		else buffnr = 1;
+		if (((playpos > 50) && (buffnr == 0)) || ((playpos < 50) && (buffnr == 1))) {
+			if ((++j) == 9) { // major scale finished
+				KillTimer(1);
+				j = 0;
+				if (!m_ds.Stop(lpDSBTonleiter))
+					return;
+				return;
+			}
+			m_ds.GenerateSound(lpDSBTonleiter, buffnr * 2, 2, ton[j]);
+			if (buffnr == 1) buffnr = 0; // change buffer
+			else buffnr = 1;
+		}
 	}
+
+	//Check for PCM-Mode
+	if (mode == 1) {
+		static int buffnr = 1, playpos, i = 3;
+
+		if ((playpos = m_ds.GetPlayPosition(lpDSBPCM)) == -1) {
+			KillTimer(1); return;
+		}
+		if (((playpos > 50) && (buffnr == 0)) || ((playpos < 50) && (buffnr == 1))) {
+			if (!m_ds.LoadPCMSound(lpDSBPCM, buffnr * 2, 2, fileptr)) {
+				i--;
+				if (i == 0) { // PCM-File finished
+					KillTimer(1);
+					if (!m_ds.Stop(lpDSBPCM))
+						return;
+					return;
+					buffnr = 1;
+				}
+			}
+			if (buffnr == 1) buffnr = 0; // change buffer
+			else buffnr = 1;
+		}
+	}
+	
 	CDialog::OnTimer(nIDEvent);
 }
 
@@ -187,7 +217,7 @@ void CDirectSoundDlg::OnBnClickedCdurtonleiter()
 	
 	// create timer 700ms
 	SetTimer(1, 700, NULL);
-	//mode = 0;
+	mode = 0;
 
 	// write 2 seconds on soundbuffer
 	m_ds.GenerateSound(lpDSBTonleiter, 0, 2, 264);
@@ -223,14 +253,14 @@ void CDirectSoundDlg::OnBnClickedCdurdreiklang()
 
 void CDirectSoundDlg::OnBnClickedPcmsound()
 {
-	/*fileptr = fopen("Sound_22050_stereo_16Bit.pcm", "rb");  // Open the file in binary mode
+	fileptr = fopen("Sound_22050_stereo_16Bit.pcm", "rb");  // Open the file in binary mode
 	fseek(fileptr, 0, SEEK_END);          // Jump to the end of the file
 	filelen = ftell(fileptr);             // Get the current byte offset in the file
 	rewind(fileptr);                      // Jump back to the beginning of the file
 
 	SetTimer(1, 200, NULL);
-	//mode = 1; // 0 - Tonleiter, 1 - PCM-Datei
-	m_ds.Play(lpDSBSecondary, true);*/
+	mode = 1; // 0 - Tonleiter, 1 - PCM-Datei
+	m_ds.Play(lpDSBPCM, true);
 }
 
 
@@ -239,6 +269,7 @@ void CDirectSoundDlg::OnBnClickedStop()
 {
 	m_ds.Stop(lpDSB264);
 	m_ds.Stop(lpDSBTonleiter);
+	m_ds.Stop(lpDSBPCM);
 
 	for (int i = 0; i < 3; i++) {
 		m_ds.Stop(lpDSBDreiklang[i]);
@@ -259,6 +290,9 @@ void CDirectSoundDlg::OnNMCustomdrawLautstaerke(NMHDR* pNMHDR, LRESULT* pResult)
 		OnCancel();
 
 	if (!m_ds.SetPlaybackVolume(lpDSBTonleiter, volume))
+		OnCancel();
+
+	if (!m_ds.SetPlaybackVolume(lpDSBPCM, volume))
 		OnCancel();
 
 	for (int i = 0; i < 3; i++) {
@@ -284,6 +318,9 @@ void CDirectSoundDlg::OnNMCustomdrawBalance(NMHDR* pNMHDR, LRESULT* pResult)
 		OnCancel();
 
 	if (!m_ds.SetBalance(lpDSBTonleiter, volume))
+		OnCancel();
+
+	if (!m_ds.SetBalance(lpDSBPCM, volume))
 		OnCancel();
 
 	for (int i = 0; i < 3; i++) {
