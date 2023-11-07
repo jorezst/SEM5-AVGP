@@ -207,7 +207,7 @@ void CMCIDlg::OnTimer(UINT_PTR nIDEvent)
 
 	int akt = m * 60 + s;
 
-	BYTE min, sek, frame;
+	unsigned char min, sek, frame;
 	mci.GetTrackOrMediaLength(t, min, sek, frame);
 	int ges = min * 60 + sek;
 
