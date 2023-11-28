@@ -258,7 +258,7 @@ void CDirectSoundDlg::OnBnClickedPcmsound()
 	filelen = ftell(fileptr);             // Get the current byte offset in the file
 	rewind(fileptr);                      // Jump back to the beginning of the file
 
-	SetTimer(1, 200, NULL);
+	SetTimer(1, 700, NULL);
 	mode = 1; // 0 - Tonleiter, 1 - PCM-Datei
 	m_ds.Play(lpDSBPCM, true);
 }
