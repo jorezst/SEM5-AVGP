@@ -29,6 +29,7 @@ protected:
 	IMediaEventEx* pEvent;
 	IVideoWindow* pVidWin = NULL;
 	IMediaSeeking* pSeek = NULL;
+	IBasicAudio* au;
 
 	// Generated message map functions
 	virtual BOOL OnInitDialog();

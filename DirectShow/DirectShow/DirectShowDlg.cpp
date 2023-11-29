@@ -104,6 +104,12 @@ HCURSOR CDirectShowDlg::OnQueryDragIcon()
 
 void CDirectShowDlg::OnBnClickedPlay()
 {
+	pMediaControl = 0;
+	pVidWin = 0;
+	pEvent = 0;
+	pSeek = 0;
+	pGraph = 0;
+
 	CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER,
 		IID_IGraphBuilder, (void**)&pGraph);
 
@@ -114,6 +120,7 @@ void CDirectShowDlg::OnBnClickedPlay()
 	
 	pGraph->QueryInterface(IID_IVideoWindow, (void**)&pVidWin);
 	pGraph->QueryInterface(IID_IMediaSeeking, (void**)&pSeek);
+	pGraph->QueryInterface(IID_IBasicAudio, (void**)&au);
 
 	// set timeformat to 100-nanoseconds units
 	if (pSeek->IsFormatSupported(&TIME_FORMAT_MEDIA_TIME) == S_OK) {
@@ -138,24 +145,23 @@ void CDirectShowDlg::OnBnClickedPlay()
 	pVidWin->SetWindowPosition(10, 70, 300, 200);
 
 	// Nachrichtenbehandlung (Maus, Keyboard)
-	pVidWin->put_MessageDrain((OAHWND)GetSafeHwnd());
 
 	pEvent->SetNotifyWindow((OAHWND)GetSafeHwnd(), WM_GRAPHNOTIFY, 0);
+	pVidWin->put_MessageDrain((OAHWND)GetSafeHwnd());
 
 	pMediaControl->Run(); long evCode;
-
-
 }
 
 
 LRESULT CDirectShowDlg::GetIt(WPARAM wparam, LPARAM lparam) {
 	long evCode, param1, param2; HRESULT hr;
-	while (SUCCEEDED(pEvent->GetEvent(&evCode, (LONG_PTR*)&param1, (LONG_PTR*)&param2, 0))) {
+	while (SUCCEEDED(pEvent->GetEvent(&evCode, &param1, &param2, 0))) {
 		pEvent->FreeEventParams(evCode, param1, param2);
 		switch (evCode) {
 		case EC_COMPLETE:
 		case EC_USERABORT:
-			CleanUp(); return 0;
+			//CleanUp(); 
+			return 0;
 		}
 	}
 	return 0;
@@ -171,6 +177,7 @@ void CDirectShowDlg::CleanUp() {
 		pVidWin->Release();
 		pEvent->Release();
 		pSeek->Release();
+		au->Release();
 		pGraph->Release();
 		pMediaControl = 0;
 		pVidWin = 0;
