@@ -42,6 +42,7 @@ BEGIN_MESSAGE_MAP(CDirectShowDlg, CDialogEx)
 	ON_WM_HSCROLL()
 	ON_BN_CLICKED(IDC_FULLSCREEN, &CDirectShowDlg::OnBnClickedFullscreen)
 	ON_WM_LBUTTONDOWN()
+	ON_BN_CLICKED(IDC_FILE, &CDirectShowDlg::OnBnClickedFile)
 END_MESSAGE_MAP()
 
 
@@ -56,9 +57,8 @@ BOOL CDirectShowDlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
-	CoInitialize(NULL); // zur Initialisierung des COM-Interfaces
-
-	SetTimer(1, 200, NULL);
+	directshow.setWindow((OAHWND)GetSafeHwnd());
+	directshow.setNotifyWindow(WM_GRAPHNOTIFY);
 
 	// TODO: Add extra initialization here
 
@@ -101,182 +101,91 @@ HCURSOR CDirectShowDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
-
-void CDirectShowDlg::OnBnClickedPlay()
-{
-	pMediaControl = 0;
-	pVidWin = 0;
-	pEvent = 0;
-	pSeek = 0;
-	pGraph = 0;
-
-	CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER,
-		IID_IGraphBuilder, (void**)&pGraph);
-
-	pGraph->QueryInterface(IID_IMediaControl, (void**)&pMediaControl);
-	pGraph->QueryInterface(IID_IMediaEventEx, (void**)&pEvent);
-
-	pGraph->RenderFile(L"test.mpg", NULL);
-	
-	pGraph->QueryInterface(IID_IVideoWindow, (void**)&pVidWin);
-	pGraph->QueryInterface(IID_IMediaSeeking, (void**)&pSeek);
-	pGraph->QueryInterface(IID_IBasicAudio, (void**)&au);
-
-	// set timeformat to 100-nanoseconds units
-	if (pSeek->IsFormatSupported(&TIME_FORMAT_MEDIA_TIME) == S_OK) {
-		pSeek->SetTimeFormat(&TIME_FORMAT_MEDIA_TIME);
-	}
-	else {
-		AfxMessageBox(L"Zeitformat wird nicht unterstützt");
-	}
-
-	if (pSeek) {
-		REFERENCE_TIME d;
-		pSeek->GetDuration(&d);
-		CSliderCtrl* sl;
-		sl = (CSliderCtrl*)GetDlgItem(IDC_SLIDER);
-		sl->SetRange(0, (int)(d / 1000000)); sl->SetPos(0);
-	}
-
-	pVidWin->put_Owner((OAHWND)GetSafeHwnd());
-	pVidWin->put_WindowStyle(WS_CHILD | WS_CLIPSIBLINGS);
-	pVidWin->put_Visible(OATRUE);
-
-	pVidWin->SetWindowPosition(10, 70, 300, 200);
-
-	// Nachrichtenbehandlung (Maus, Keyboard)
-
-	pEvent->SetNotifyWindow((OAHWND)GetSafeHwnd(), WM_GRAPHNOTIFY, 0);
-	pVidWin->put_MessageDrain((OAHWND)GetSafeHwnd());
-
-	pMediaControl->Run(); long evCode;
-}
-
-
 LRESULT CDirectShowDlg::GetIt(WPARAM wparam, LPARAM lparam) {
-	long evCode, param1, param2; HRESULT hr;
-	while (SUCCEEDED(pEvent->GetEvent(&evCode, &param1, &param2, 0))) {
-		pEvent->FreeEventParams(evCode, param1, param2);
-		switch (evCode) {
-		case EC_COMPLETE:
-		case EC_USERABORT:
-			//CleanUp(); 
-			return 0;
-		}
-	}
-	return 0;
+	return directshow.GetIt(wparam, lparam);
 }
 
+// Timer fragt regelmäßig ab, an welcher Stelle der Film gerade ist
+void CDirectShowDlg::OnTimer(UINT_PTR nIDEvent) {
+	REFERENCE_TIME rtTotal, rtNow = 0;
+	CString s;
+	CSliderCtrl* sl = (CSliderCtrl*)GetDlgItem(IDC_SLIDER);
+	//rtTotal = directshow.getLength();
+	//rtNow = directshow.getCurrentPosition();
+	directshow.seek(&rtTotal, &rtNow);
 
-void CDirectShowDlg::CleanUp() {
-	if (pGraph) {
-		Fullscreen(false);
-		pVidWin->put_Visible(OAFALSE);
-		pVidWin->put_Owner(NULL);
-		pMediaControl->Release();
-		pVidWin->Release();
-		pEvent->Release();
-		pSeek->Release();
-		au->Release();
-		pGraph->Release();
-		pMediaControl = 0;
-		pVidWin = 0;
-		pEvent = 0;
-		pSeek = 0;
-		pGraph = 0;
-		
+	if ((rtNow * 100) / rtTotal == 100) {
+		directshow.setZero();
+		directshow.Pause();
+		directshow.fullscreen(FALSE);
+		sl->SetPos(0);
 	}
-	//CoUninitialize();
-}
+	s.Format(L"%02d:%02d (%d%%)",
+		(int)((rtNow / 10000000L) / 60), // min
+		(int)((rtNow / 10000000L) % 60), // sek
+		(int)((rtNow * 100) / rtTotal)); // Prozent
+	GetDlgItem(IDC_STATUS)->SetWindowText(s);
 
+	REFERENCE_TIME d;
+	d = directshow.getLength();
 
-void CDirectShowDlg::OnBnClickedPause()
-{
-	if (pMediaControl != 0) {
-		pMediaControl->Pause();
-	}
-		
-}
-
-
-void CDirectShowDlg::OnBnClickedResume()
-{
-	if (pMediaControl != 0) {
-		pMediaControl->Run();
-	}
-		
-}
-
-
-void CDirectShowDlg::OnBnClickedStop()
-{
-	if (pMediaControl != 0) {
-		pMediaControl->Stop(); CleanUp();
-	}
-}
- 
-
-void CDirectShowDlg::OnBnClickedFullscreen()
-{
-	Fullscreen(true);
-}
-
-
-void CDirectShowDlg::OnLButtonDown(UINT nFlags, CPoint point)
-{
-	Fullscreen(false);
-	CDialogEx::OnLButtonDown(nFlags, point);
-}
-
-
-void CDirectShowDlg::Fullscreen(bool v) {
-	if (pGraph) {
-		IVideoWindow* pVidWin1 = NULL;
-		pGraph->QueryInterface(IID_IVideoWindow, (void**)&pVidWin1);
-		pVidWin1->put_FullScreenMode(v ? OATRUE : OAFALSE);
-		pVidWin1->Release();
-	}
-}
-
-
-void CDirectShowDlg::OnTimer(UINT_PTR nIDEvent)
-{
-	if (pSeek) {
-		REFERENCE_TIME rtTotal, rtNow = 0; CString s;
-		pSeek->GetDuration(&rtTotal);
-		pSeek->GetCurrentPosition(&rtNow);
-		s.Format(L"Abspielvorgang: %02d:%02d (%d%%)",
-			(int)((rtNow / 10000000L) / 60), // min
-			(int)((rtNow / 10000000L) % 60), // sek
-			(int)((rtNow * 100) / rtTotal)); // Prozent
-		GetDlgItem(IDC_STATUS)->SetWindowText(s);
-
-		((CSliderCtrl*)GetDlgItem(IDC_SLIDER))->SetPos((int)(rtNow / 1000000));
-	}
-	else {
-		GetDlgItem(IDC_STATUS)->SetWindowText(L"Abspielvorgang: 00:00 (0%)");
-		((CSliderCtrl*)GetDlgItem(IDC_SLIDER))->SetPos(0);
-	}
-	
+	sl->SetRange(0, (int)(d / 1000000));
+	sl->SetPos(0);
+	((CSliderCtrl*)GetDlgItem(IDC_SLIDER))->SetPos((int)(rtNow / 1000000));
 
 	CDialogEx::OnTimer(nIDEvent);
 }
 
-
-void CDirectShowDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
-{
-	if (pMediaControl != 0) {
-		pMediaControl->Pause();
-	}
+void CDirectShowDlg::OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar) {
 	CSliderCtrl* sl1 = (CSliderCtrl*)GetDlgItem(IDC_SLIDER);
-	if ((pSeek) && ((void*)sl1 == (void*)pScrollBar)) {
+	if ((void*)sl1 == (void*)pScrollBar) {
 		REFERENCE_TIME pos = (REFERENCE_TIME)sl1->GetPos() * 1000000;
-		pSeek->SetPositions(&pos, AM_SEEKING_AbsolutePositioning,
-			NULL, AM_SEEKING_NoPositioning);
+		directshow.setCurrentPosition(pos);
 	}
-	if (pMediaControl != 0) {
-		pMediaControl->Run();
-	}
-
 	CDialogEx::OnHScroll(nSBCode, nPos, pScrollBar);
+}
+
+void CDirectShowDlg::OnBnClickedPlay() {
+	directshow.setVideoWindow();
+	directshow.Run();
+	SetTimer(1, 200, NULL);
+}
+
+void CDirectShowDlg::OnBnClickedPause() {
+	directshow.Pause();
+}
+
+void CDirectShowDlg::OnBnClickedResume() {
+	directshow.Resume();
+}
+
+void CDirectShowDlg::OnBnClickedFullscreen() {
+	directshow.fullscreen(TRUE);
+
+}
+
+void CDirectShowDlg::OnBnClickedStop() {
+	// Timer vorher beenden, damit keine Werte mehr im Timer aufgerufen werden können
+	KillTimer(1);
+	directshow.Stop();
+}
+
+void CDirectShowDlg::OnLButtonDown(UINT nFlags, CPoint point) {
+	directshow.fullscreen(FALSE);
+	CDialogEx::OnLButtonDown(nFlags, point);
+}
+
+void CDirectShowDlg::OnBnClickedFile() {
+
+	CString szFilters = L"Media Files|*.mpg;*.avi;*.wma;*.mov;*.wav;*.mp2;*.mp3;*.mp4|All Files (*.*)|*.*||";
+	// Erstelle einen OpenDialog
+	CFileDialog fileDlg(TRUE, NULL, NULL, OFN_FILEMUSTEXIST | OFN_HIDEREADONLY, szFilters, this);
+
+	// Zeige den FileDialog ; Wenn der Nutzer OK klickt -> fileDlg.DoModal()
+	if (fileDlg.DoModal() == IDOK)
+	{
+		directshow.setFilename(fileDlg.GetPathName());
+		CString gfn = fileDlg.GetFileName();
+		GetDlgItem(IDC_FILENAME)->SetWindowText(gfn);
+	}
 }

@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "DirectShowContainer.h"
+
 
 // CDirectShowDlg dialog
 class CDirectShowDlg : public CDialogEx
@@ -24,17 +26,11 @@ public:
 // Implementation
 protected:
 	HICON m_hIcon;
-	IGraphBuilder* pGraph; // ein Zeiger auf das COM-Interface
-	IMediaControl* pMediaControl;
-	IMediaEventEx* pEvent;
-	IVideoWindow* pVidWin = NULL;
-	IMediaSeeking* pSeek = NULL;
-	IBasicAudio* au;
+
+	CDirectShowContainer directshow;
 
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
-	void CleanUp();
-	void Fullscreen(bool v);
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
@@ -48,4 +44,6 @@ public:
 	afx_msg void OnHScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	afx_msg void OnBnClickedFullscreen();
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnBnClickedFile();
+	afx_msg void OnStnClickedFilename();
 };

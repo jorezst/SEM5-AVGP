@@ -188,6 +188,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="DirectShow.h" />
+    <ClInclude Include="DirectShowContainer.h" />
     <ClInclude Include="DirectShowDlg.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
@@ -196,6 +197,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DirectShow.cpp" />
+    <ClCompile Include="DirectShowContainer.cpp" />
     <ClCompile Include="DirectShowDlg.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
