@@ -45,5 +45,4 @@ public:
 	afx_msg void OnBnClickedFullscreen();
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnBnClickedFile();
-	afx_msg void OnStnClickedFilename();
 };

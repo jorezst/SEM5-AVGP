@@ -110,8 +110,6 @@ void CDirectShowDlg::OnTimer(UINT_PTR nIDEvent) {
 	REFERENCE_TIME rtTotal, rtNow = 0;
 	CString s;
 	CSliderCtrl* sl = (CSliderCtrl*)GetDlgItem(IDC_SLIDER);
-	//rtTotal = directshow.getLength();
-	//rtNow = directshow.getCurrentPosition();
 	directshow.seek(&rtTotal, &rtNow);
 
 	if ((rtNow * 100) / rtTotal == 100) {
