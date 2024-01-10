@@ -200,6 +200,7 @@ BOOL CPixelgrafikDlg::OnCommand(WPARAM wParam, LPARAM lParam) {
 	int soften_matrix[9] = { 6, 12, 6, 12, 25, 12, 6, 12, 6 }; // 1013
 	int emboss_matrix[9] = { -1, 0, 0, 0, 0, 0, 0, 0, 1 }; // 1014
 	int edge_matrix[9] = { -1, -1, -1, -1, 8, -1, -1, -1, -1 }; // 1015
+	int relief_matrix[9] = { -2, -1, 0, -1, 1, 1, 0, 1, 2 }; // 1024
 
 	if (wParam > 1001) {
 		if (!m_dib.ImageLoaded()) {
@@ -285,6 +286,9 @@ BOOL CPixelgrafikDlg::OnCommand(WPARAM wParam, LPARAM lParam) {
 	case 1015: // Kantenerkennung
 		m_dib.matrix(edge_matrix, 1, 1);
 		break;
+	case 1024: // Relief
+		m_dib.matrix(relief_matrix, 1, 1);
+		break;
 	case 1016: // Flip horizontal
 		m_dib.flip('h');
 		break;
@@ -292,9 +296,9 @@ BOOL CPixelgrafikDlg::OnCommand(WPARAM wParam, LPARAM lParam) {
 		m_dib.flip('v');
 		break;
 	case 1023:
-		m_dib.Load((CString)"bild.bmp");
-		m_dib2.Load((CString)"bild.bmp");
-		m_dib3.Load((CString)"bild_vertikal.bmp");
+		m_dib.Load((CString)"bild_5.bmp");
+		m_dib2.Load((CString)"bild_5.bmp");
+		m_dib3.Load((CString)"bild_5_vertikal.bmp");
 		RedrawWindow();
 
 		if (percentageDlg.DoModal() == IDOK) {
@@ -356,6 +360,7 @@ void CPixelgrafikDlg::create_popup_menu() {
 	menu.AppendMenu(MF_STRING, 1013, L"Unschaerfe");
 	menu.AppendMenu(MF_STRING, 1014, L"Emboss");
 	menu.AppendMenu(MF_STRING, 1015, L"Kantenerkennung");
+	menu.AppendMenu(MF_STRING, 1024, L"Relief");
 	menu.AppendMenu(MF_STRING, 1023, L"Blending");
 
 	// Seperatorline
